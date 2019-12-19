@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button'
 import Menu from '@material-ui/core/Menu'
 import MenuItem from '@material-ui/core/MenuItem'
 
-import { useSelectionInterface } from '../react-hooks'
+import { useSelectionInterface, useDrawInterface } from '../react-hooks'
 
 import { Layout, Provider, AddConfig, DragSource } from '../react-golden-layout'
 
@@ -13,11 +13,18 @@ import Histogram from '../histogram'
 import Inspector from '../inspector/inspector'
 import ResultTable from '../results/results'
 
-import { ClusterMap, RENDERER_STYLE } from '../maps'
+import {
+  ClusterMap,
+  RENDERER_STYLE,
+  DRAWING_STYLE,
+  withDrawMenu,
+} from '../maps'
 import WKT from 'ol/format/WKT'
 import GeoJSON from 'ol/format/GeoJSON'
 import { geometry, coordinates } from 'geospatialdraw'
 import { Set } from 'immutable'
+
+const MapComponent = withDrawMenu(ClusterMap)
 
 const AddVisualization = () => {
   const [anchorEl, setAnchorEl] = useState(null)
@@ -169,6 +176,10 @@ const Visualizations = props => {
   const MapVis = () => {
     const PROJECTION = 'EPSG:4326'
     const [selection, onSelect] = useSelectionInterface()
+    const [
+      { geo: drawGeo, shape, active: isDrawing },
+      setDrawState,
+    ] = useDrawInterface()
     const geos = results
       .map(
         result =>
@@ -197,9 +208,10 @@ const Visualizations = props => {
         ? getCoord(centerOfMass(featureCollection(selectedGeos)))
         : null
     return (
-      <ClusterMap
+      <MapComponent
         projection={PROJECTION}
-        style={RENDERER_STYLE}
+        mapStyle={RENDERER_STYLE}
+        drawStyle={DRAWING_STYLE}
         coordinateType={coordinates.LAT_LON}
         maxZoom={20}
         minZoom={1.5}
@@ -207,7 +219,40 @@ const Visualizations = props => {
         geos={geos}
         center={center}
         selectGeos={ids => {
-          onSelect(Set(ids))
+          if (!isDrawing) {
+            onSelect(Set(ids))
+          }
+        }}
+        isDrawing={isDrawing}
+        drawShape={shape}
+        drawGeo={drawGeo}
+        onSetShape={update => {
+          setDrawState({
+            geo: null,
+            active: true,
+            shape: update,
+          })
+        }}
+        onUpdate={update => {
+          setDrawState({
+            geo: update,
+            active: true,
+            shape,
+          })
+        }}
+        onCancel={() => {
+          setDrawState({
+            geo: null,
+            active: false,
+            shape,
+          })
+        }}
+        onOk={() => {
+          setDrawState({
+            geo: drawGeo,
+            active: false,
+            shape,
+          })
         }}
       />
     )
