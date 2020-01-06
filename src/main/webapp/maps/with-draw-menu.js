@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Box from '@material-ui/core/Box'
 import { menu, drawing } from 'geospatialdraw'
+import { useTheme } from '../theme/theme-provider'
 
 const Root = props => (
   <Box
@@ -14,7 +15,16 @@ const Root = props => (
     {...props}
   />
 )
-const MenuContainer = props => <Box bgcolor="rgb(52, 172, 247)" {...props} />
+const MenuContainer = props => {
+  const {
+    palette: {
+      background: {
+        default: bgcolor
+      }
+    }
+  } = useTheme()
+  return (<Box bgcolor={bgcolor} {...props} />)
+}
 const Menu = menu.MaterialDrawMenu
 
 const withDrawMenu = WorldMap => ({
@@ -31,6 +41,13 @@ const withDrawMenu = WorldMap => ({
   onMapLoaded = () => {},
   ...rest
 }) => {
+  const {
+    palette: {
+      text: {
+        primary: iconColor
+      }
+    }
+  } = useTheme()
   const [drawToolbox, setToolbox] = useState(null)
   const [map, setMap] = useState(null)
   const isActive = drawToolbox && isDrawing
@@ -63,6 +80,7 @@ const withDrawMenu = WorldMap => ({
             onUpdate={onUpdate}
             disabledShapes={['Point']}
             defaultGeoProperties={defaultGeoProperties}
+            iconColor={iconColor}
           />
         </MenuContainer>
       )}

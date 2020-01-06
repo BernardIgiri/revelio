@@ -19,7 +19,7 @@ const query = gql`
   }
 `
 
-const useTheme = () => {
+export const useTheme = () => {
   const { data } = useQuery(query)
 
   const theme = getIn(data, ['user', 'preferences', 'theme', 'theme'], 'light')
